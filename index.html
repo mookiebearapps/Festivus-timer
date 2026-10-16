@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festivus Countdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+        }
+
+        /* Rotating Background without gaps */
+        .rotating-bg-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            /* 300vmax guarantees it covers the screen regardless of aspect ratio or rotation */
+            width: 300vmax;
+            height: 300vmax;
+            background: conic-gradient(
+                #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000
+            );
+            animation: spin 10s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* Timer Styling */
+        .timer-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .timer-box {
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            text-shadow: 2px 2px 4px rgba(0,0,0,1);
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            color: white;
+            text-align: center;
+        }
+
+        /* Thinner Festivus Pole */
+        #pole {
+            position: absolute;
+            width: 30px;
+            height: 200px;
+            z-index: 5;
+            object-fit: fill; /* Squish aspect ratio */
+            filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.8));
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Heavily Oversized Rotating Background -->
+    <div class="rotating-bg-container"></div>
+
+    <!-- Fixed Timer Box -->
+    <div class="timer-container">
+        <div class="timer-box">
+            <h1 class="text-3xl md:text-5xl font-bold tracking-widest uppercase mb-4">Festivus</h1>
+            <div id="countdown" class="text-2xl md:text-4xl font-mono font-bold tracking-wider whitespace-nowrap">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouncing Festivus Pole Image -->
+    <img src="1000005222.png" id="pole" alt="Festivus Pole" onerror="this.src='https://placehold.co/30x200/cccccc/000000?text=Pole'">
+
+    <script>
+        // --- Countdown Timer Logic ---
+        function updateCountdown() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            
+            // Festivus is December 23rd
+            let festivusDate = new Date(currentYear, 11, 23);
+
+            // If Festivus has passed, aim for next year
+            if (now.getTime() > festivusDate.getTime() + (24 * 60 * 60 * 1000)) {
+                festivusDate = new Date(currentYear + 1, 11, 23);
+            }
+
+            const diff = festivusDate - now;
+
+            if (diff <= 0 && diff > -(24 * 60 * 60 * 1000)) {
+                document.getElementById('countdown').innerText = "IT IS FESTIVUS!";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const formattedTime = `${days}days ${String(hours).padStart(2, '0')}hrs ${String(minutes).padStart(2, '0')}min ${String(seconds).padStart(2, '0')}sec`;
+            document.getElementById('countdown').innerText = formattedTime;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // --- DVD Screensaver Bouncing Logic ---
+        const pole = document.getElementById('pole');
+        
+        // Initial setup
+        const poleWidth = 30;
+        const poleHeight = 200;
+        let x = Math.random() * (window.innerWidth - poleWidth);
+        let y = Math.random() * (window.innerHeight - poleHeight);
+        
+        // Speeds
+        let speedX = 4;
+        let speedY = 4;
+
+        function animatePole() {
+            // Screen boundaries
+            const maxX = window.innerWidth - poleWidth;
+            const maxY = window.innerHeight - poleHeight;
+
+            // Bounce horizontally
+            if (x >= maxX) {
+                x = maxX;
+                speedX = -Math.abs(speedX);
+            } else if (x <= 0) {
+                x = 0;
+                speedX = Math.abs(speedX);
+            }
+
+            // Bounce vertically
+            if (y >= maxY) {
+                y = maxY;
+                speedY = -Math.abs(speedY);
+            } else if (y <= 0) {
+                y = 0;
+                speedY = Math.abs(speedY);
+            }
+
+            // Update positions
+            x += speedX;
+            y += speedY;
+
+            // Apply to element
+            pole.style.left = x + 'px';
+            pole.style.top = y + 'px';
+
+            requestAnimationFrame(animatePole);
+        }
+
+        // Start animation loop
+        animatePole();
+
+        // Handle window resizing to keep the pole inside bounds
+        window.addEventListener('resize', () => {
+            if (x > window.innerWidth - poleWidth) x = window.innerWidth - poleWidth;
+            if (y > window.innerHeight - poleHeight) y = window.innerHeight - poleHeight;
+        });
+    </script>
+</body>
+</html>
